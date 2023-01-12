@@ -4,8 +4,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
+import org.springframework.boot.autoconfigure.session.SessionAutoConfiguration;
 
-@SpringBootApplication
+@SpringBootApplication(exclude = {RedisAutoConfiguration.class, SessionAutoConfiguration.class})
 @MapperScan("com.guoapi.project.mapper")
 @Slf4j
 public class MyApplication {
