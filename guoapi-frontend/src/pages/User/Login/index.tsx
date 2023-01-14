@@ -121,6 +121,9 @@ const Login: React.FC = () => {
       if (res.data) {
         const urlParams = new URL(window.location.href).searchParams;
         history.push(urlParams.get('redirect') || '/');
+        setInitialState({
+          loginUser: res.data
+        });
         return;
       }
       // 如果失败去设置用户错误信息
