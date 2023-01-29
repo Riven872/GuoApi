@@ -1,7 +1,4 @@
-import {
-  ProColumns,
-  ProTable,
-} from '@ant-design/pro-components';
+import { ProColumns, ProTable } from '@ant-design/pro-components';
 import { Modal } from 'antd';
 import React from 'react';
 
@@ -21,12 +18,18 @@ export type Props = {
 };
 
 const CreateModal: React.FC<Props> = (props) => {
-  const {updateModalOpen,columns,onCancel,onSubmit} = props;
-  return <Modal footer={null} open={updateModalOpen} onCancel={() => onCancel?.()}>
-    <ProTable type='form' columns={columns} onSubmit={async (values) => {
-      onSubmit?.(values);
-        }}></ProTable>
-  </Modal>
+  const { updateModalOpen, columns, onCancel, onSubmit } = props;
+  return (
+    <Modal footer={null} open={updateModalOpen} onCancel={() => onCancel?.()}>
+      <ProTable
+        type="form"
+        columns={columns}
+        onSubmit={async (values) => {
+          onSubmit?.(values);
+        }}
+      ></ProTable>
+    </Modal>
+  );
 };
 
 export default CreateModal;

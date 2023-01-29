@@ -2,15 +2,19 @@ package com.guoapi.project.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.google.gson.Gson;
+import com.guoapi.guoapiclientsdk.client.GuoApiClient;
 import com.guoapi.project.annotation.AuthCheck;
 import com.guoapi.project.common.*;
 import com.guoapi.project.constant.CommonConstant;
 import com.guoapi.project.exception.BusinessException;
 import com.guoapi.project.model.dto.interfaceinfo.InterfaceInfoAddRequest;
+import com.guoapi.project.model.dto.interfaceinfo.InterfaceInfoInvokeRequest;
 import com.guoapi.project.model.dto.interfaceinfo.InterfaceInfoQueryRequest;
 import com.guoapi.project.model.dto.interfaceinfo.InterfaceInfoUpdateRequest;
 import com.guoapi.project.model.entity.InterfaceInfo;
 import com.guoapi.project.model.entity.User;
+import com.guoapi.project.model.enums.InterfaceInfoStatusEnum;
 import com.guoapi.project.service.InterfaceInfoService;
 import com.guoapi.project.service.UserService;
 import lombok.extern.slf4j.Slf4j;
@@ -37,6 +41,9 @@ public class InterfaceInfoController {
 
     @Resource
     private UserService userService;
+
+    @Resource
+    private GuoApiClient guoApiClient;
 
     // region 增删改查
 
@@ -201,6 +208,7 @@ public class InterfaceInfoController {
      * @return
      */
     @PostMapping("/online")
+    @AuthCheck(mustRole = "admin")
     public BaseResponse<Boolean> onlineInterfaceInfo(@RequestBody IdRequest idRequest, HttpServletRequest request) {
         // 判断传参是否规范
         if (idRequest == null || idRequest.getId() < 0) {
@@ -212,24 +220,14 @@ public class InterfaceInfoController {
         if (oldInterfaceInfo == null) {
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
         }
-        // 判断接口是否处于可调用状态
-        // todo 调用自定义的 sdk 去判断
+        // 判断接口是否处于可调用状态（使用自定义的 SDK）
+        com.guoapi.guoapiclientsdk.model.User user = new com.guoapi.guoapiclientsdk.model.User();
+        user.setName("key");
+        guoApiClient.getUsernameByPost(user);
 
-        //...
-        if (interfaceInfoUpdateRequest == null || interfaceInfoUpdateRequest.getId() <= 0) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR);
-        }
         InterfaceInfo interfaceInfo = new InterfaceInfo();
-        BeanUtils.copyProperties(interfaceInfoUpdateRequest, interfaceInfo);
-        // 参数校验
-        interfaceInfoService.validInterfaceInfo(interfaceInfo, false);
-        User user = userService.getLoginUser(request);
-        long id = interfaceInfoUpdateRequest.getId();
-
-        // 仅本人或管理员可修改
-        if (!oldInterfaceInfo.getUserId().equals(user.getId()) && !userService.isAdmin(request)) {
-            throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
-        }
+        interfaceInfo.setId(requestId);
+        interfaceInfo.setStatus(InterfaceInfoStatusEnum.ONLINE.getValue());
         boolean result = interfaceInfoService.updateById(interfaceInfo);
         return ResultUtils.success(result);
     }
@@ -242,27 +240,63 @@ public class InterfaceInfoController {
      * @return
      */
     @PostMapping("/offline")
+    @AuthCheck(mustRole = "admin")
     public BaseResponse<Boolean> offlineInterfaceInfo(@RequestBody IdRequest idRequest,
                                                       HttpServletRequest request) {
-        if (interfaceInfoUpdateRequest == null || interfaceInfoUpdateRequest.getId() <= 0) {
+        // 判断传参是否规范
+        if (idRequest == null || idRequest.getId() < 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
+        Long requestId = idRequest.getId();
+        // 判断接口是否存在
+        InterfaceInfo oldInterfaceInfo = interfaceInfoService.getById(requestId);
+        if (oldInterfaceInfo == null) {
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
+        }
+
         InterfaceInfo interfaceInfo = new InterfaceInfo();
-        BeanUtils.copyProperties(interfaceInfoUpdateRequest, interfaceInfo);
-        // 参数校验
-        interfaceInfoService.validInterfaceInfo(interfaceInfo, false);
-        User user = userService.getLoginUser(request);
-        long id = interfaceInfoUpdateRequest.getId();
-        // 判断是否存在
+        interfaceInfo.setId(requestId);
+        interfaceInfo.setStatus(InterfaceInfoStatusEnum.OFFLINE.getValue());
+        boolean result = interfaceInfoService.updateById(interfaceInfo);
+        return ResultUtils.success(result);
+    }
+
+    /**
+     * 下线接口
+     *
+     * @param interfaceInfoInvokeRequest
+     * @param request
+     * @return
+     */
+    @PostMapping("/invoke")
+    public BaseResponse<Object> invokeInterfaceInfo(@RequestBody InterfaceInfoInvokeRequest interfaceInfoInvokeRequest,
+                                                     HttpServletRequest request) {
+        // 判断传参是否规范
+        if (interfaceInfoInvokeRequest == null || interfaceInfoInvokeRequest.getId() <= 0) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        Long id = interfaceInfoInvokeRequest.getId();
+        String userRequestParams = interfaceInfoInvokeRequest.getUserRequestParams();
+        // 判断接口是否存在
         InterfaceInfo oldInterfaceInfo = interfaceInfoService.getById(id);
         if (oldInterfaceInfo == null) {
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
         }
-        // 仅本人或管理员可修改
-        if (!oldInterfaceInfo.getUserId().equals(user.getId()) && !userService.isAdmin(request)) {
-            throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
+        // 判断接口是否开启
+        if (oldInterfaceInfo.getStatus() != InterfaceInfoStatusEnum.ONLINE.getValue()) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "接口已关闭");
         }
-        boolean result = interfaceInfoService.updateById(interfaceInfo);
-        return ResultUtils.success(result);
+        // 解析用户的 key 和传进来的参数
+        User loginUser = userService.getLoginUser(request);
+        String accessKey = loginUser.getAccessKey();
+        String secretKey = loginUser.getSecretKey();
+
+        GuoApiClient client = new GuoApiClient(accessKey, secretKey);
+
+        Gson gson = new Gson();
+        com.guoapi.guoapiclientsdk.model.User user = gson.fromJson(userRequestParams, com.guoapi.guoapiclientsdk.model.User.class);
+        // 测试调用接口
+        String post = client.getUsernameByPost(user);
+        return ResultUtils.success(post);
     }
 }

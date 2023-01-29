@@ -11,6 +11,28 @@
  * @doc https://umijs.org/docs/guides/routes
  */
 export default [
+  /**
+   * 查看接口列表页面
+   */
+  {
+    path: '/',
+    name: 'home',
+    icon: 'smile',
+    component: './Index',
+  },
+  /**
+   * 查看接口详情页面
+   */
+  {
+    path:'/interface-info/:id',
+    name: 'interface-info',
+    icon: 'RocketOutlined',
+    component: './InterfaceInfo',
+    hideInMenu: true
+  },
+  /**
+   * 登录页
+   */
   {
     path: '/user',
     layout: false,
@@ -22,12 +44,6 @@ export default [
       },
     ],
   },
-  // {
-  //   path: '/welcome',
-  //   name: 'welcome',
-  //   icon: 'smile',
-  //   component: './Welcome',
-  // },
   {
     path: '/admin',
     name: 'admin',
@@ -35,10 +51,10 @@ export default [
     access: 'canAdmin',
     routes: [
       {
-        name: '接口管理',
+        name: 'interface-manage',
         icon: 'table',
         path: '/admin/interface_info',
-        component: './InterfaceInfo',
+        component: './Admin/InterfaceInfo',
       },
       // {
       //   path: '/admin',
