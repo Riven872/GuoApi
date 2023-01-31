@@ -2,10 +2,10 @@ package com.guoapi.guoapiclientsdk.client;
 
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.http.HttpRequest;
+import cn.hutool.http.HttpResponse;
 import cn.hutool.http.HttpUtil;
 import cn.hutool.json.JSONUtil;
 import com.guoapi.guoapiclientsdk.model.User;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -63,14 +63,16 @@ public class GuoApiClient {
      * @param user
      * @return
      */
-    public String getUsernameByPost(@RequestBody User user) {
-        String json = JSONUtil.toJsonStr(user.getName());
+    public String getUsernameByPost(User user) {
+        String json = JSONUtil.toJsonStr(user);
 
-        return HttpRequest.post("http://localhost:8123/api/name/user")
-                .body(json)
+        HttpResponse response = HttpRequest
+                .post("http://localhost:8123/api/name/user")
                 .addHeaders(getHeaderMap(json))
-                .execute()
-                .body();
+                .body(json)
+                .execute();
+        String body = response.body();
+        return body;
     }
 
 
