@@ -28,6 +28,8 @@ public class GuoApiClient {
      */
     private String secretKey;
 
+    public static final String GATEWAY_HOST = "http://localhost:8090";
+
     public GuoApiClient(String accessKey, String secretKey) {
         this.accessKey = accessKey;
         this.secretKey = secretKey;
@@ -42,7 +44,7 @@ public class GuoApiClient {
     public String getNameByGet(String name) {
         HashMap<String, Object> map = new HashMap<>();
         map.put("name", name);
-        return HttpUtil.get("http://localhost:8123/api/name", map);
+        return HttpUtil.get(GATEWAY_HOST + "/api/name", map);
     }
 
     /**
@@ -54,7 +56,7 @@ public class GuoApiClient {
     public String getNameByPost(String name) {
         HashMap<String, Object> map = new HashMap<>();
         map.put("name", name);
-        return HttpUtil.post("http://localhost:8123/api/name", map);
+        return HttpUtil.post(GATEWAY_HOST + "/api/name", map);
     }
 
     /**
@@ -67,7 +69,7 @@ public class GuoApiClient {
         String json = JSONUtil.toJsonStr(user);
 
         HttpResponse response = HttpRequest
-                .post("http://localhost:8123/api/name/user")
+                .post(GATEWAY_HOST + "/api/name/user")
                 .addHeaders(getHeaderMap(json))
                 .body(json)
                 .execute();
