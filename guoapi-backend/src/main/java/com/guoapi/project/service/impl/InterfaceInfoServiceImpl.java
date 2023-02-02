@@ -1,10 +1,10 @@
 package com.guoapi.project.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.guoapi.common.model.entity.InterfaceInfo;
 import com.guoapi.project.common.ErrorCode;
 import com.guoapi.project.exception.BusinessException;
 import com.guoapi.project.mapper.InterfaceInfoMapper;
-import com.guoapi.project.model.entity.InterfaceInfo;
 import com.guoapi.project.service.InterfaceInfoService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;

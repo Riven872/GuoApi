@@ -1,4 +1,4 @@
-package com.guoapi.project.model.enums;
+package com.guoapi.common.model.enums;
 
 import java.util.Arrays;
 import java.util.List;

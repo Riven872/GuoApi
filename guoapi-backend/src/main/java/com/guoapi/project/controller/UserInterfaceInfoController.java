@@ -2,6 +2,8 @@ package com.guoapi.project.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.guoapi.common.model.entity.User;
+import com.guoapi.common.model.entity.UserInterfaceInfo;
 import com.guoapi.project.annotation.AuthCheck;
 import com.guoapi.project.common.BaseResponse;
 import com.guoapi.project.common.DeleteRequest;
@@ -13,8 +15,6 @@ import com.guoapi.project.exception.BusinessException;
 import com.guoapi.project.model.dto.userinterfaceinfo.UserInterfaceInfoAddRequest;
 import com.guoapi.project.model.dto.userinterfaceinfo.UserInterfaceInfoQueryRequest;
 import com.guoapi.project.model.dto.userinterfaceinfo.UserInterfaceInfoUpdateRequest;
-import com.guoapi.project.model.entity.User;
-import com.guoapi.project.model.entity.UserInterfaceInfo;
 import com.guoapi.project.service.UserInterfaceInfoService;
 import com.guoapi.project.service.UserService;
 import org.apache.commons.lang3.StringUtils;

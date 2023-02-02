@@ -1,6 +1,6 @@
 package com.guoapi.project.service;
 
-import com.guoapi.project.model.entity.User;
+import com.guoapi.common.model.entity.User;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

@@ -1,7 +1,8 @@
 package com.guoapi.project.mapper;
 
-import com.guoapi.project.model.entity.UserInterfaceInfo;
+
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.guoapi.common.model.entity.UserInterfaceInfo;
 
 /**
 * @author rivenzhou

@@ -1,7 +1,8 @@
 package com.guoapi.project.service;
 
-import com.guoapi.project.model.entity.UserInterfaceInfo;
+
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.guoapi.common.model.entity.UserInterfaceInfo;
 
 /**
 * @author rivenzhou

@@ -2,9 +2,9 @@ package com.guoapi.project.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.guoapi.common.model.entity.UserInterfaceInfo;
 import com.guoapi.project.common.ErrorCode;
 import com.guoapi.project.exception.BusinessException;
-import com.guoapi.project.model.entity.UserInterfaceInfo;
 import com.guoapi.project.service.UserInterfaceInfoService;
 import com.guoapi.project.mapper.UserInterfaceInfoMapper;
 import org.springframework.stereotype.Service;

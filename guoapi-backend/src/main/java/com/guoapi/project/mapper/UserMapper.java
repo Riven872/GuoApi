@@ -1,7 +1,8 @@
 package com.guoapi.project.mapper;
 
+
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.guoapi.project.model.entity.User;
+import com.guoapi.common.model.entity.User;
 
 /**
  * @Entity com.guoapi.project.model.domain.User

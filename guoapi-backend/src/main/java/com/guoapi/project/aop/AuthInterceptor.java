@@ -1,10 +1,10 @@
 package com.guoapi.project.aop;
 
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
+import com.guoapi.common.model.entity.User;
 import com.guoapi.project.annotation.AuthCheck;
 import com.guoapi.project.common.ErrorCode;
 import com.guoapi.project.exception.BusinessException;
-import com.guoapi.project.model.entity.User;
 import com.guoapi.project.service.UserService;
 import org.apache.commons.lang3.StringUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -48,7 +48,7 @@ public class AuthInterceptor {
         RequestAttributes requestAttributes = RequestContextHolder.currentRequestAttributes();
         HttpServletRequest request = ((ServletRequestAttributes) requestAttributes).getRequest();
         // 当前登录用户
-        User user = userService.getLoginUser(request);
+        User user = (User) userService.getLoginUser(request);
         // 拥有任意权限即通过
         if (CollectionUtils.isNotEmpty(anyRole)) {
             String userRole = user.getUserRole();

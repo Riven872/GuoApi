@@ -2,7 +2,7 @@ package com.guoapi.project.service;
 
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.guoapi.project.model.entity.User;
+import com.guoapi.common.model.entity.User;
 
 import javax.servlet.http.HttpServletRequest;
 
