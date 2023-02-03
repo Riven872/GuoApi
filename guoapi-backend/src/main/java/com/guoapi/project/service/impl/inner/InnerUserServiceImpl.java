@@ -20,17 +20,15 @@ public class InnerUserServiceImpl implements InnerUserService {
      * 查询数据库中是否已经分配给用户密钥
      *
      * @param accessKey
-     * @param secretKey
      * @return 返回用户信息
      */
     @Override
-    public User getInvokeUser(String accessKey, String secretKey) {
-        if (StringUtils.isAnyBlank(accessKey, secretKey)) {
+    public User getInvokeUser(String accessKey) {
+        if (StringUtils.isEmpty(accessKey)) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(User::getAccessKey, accessKey)
-                .eq(User::getSecretKey, secretKey);
+        wrapper.eq(User::getAccessKey, accessKey);
 
         return userMapper.selectOne(wrapper);
     }

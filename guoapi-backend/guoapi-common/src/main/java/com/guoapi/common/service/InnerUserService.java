@@ -13,8 +13,7 @@ public interface InnerUserService {
      * 查询数据库中是否已经分配给用户密钥
      *
      * @param accessKey
-     * @param secretKey
      * @return 返回用户信息
      */
-    User getInvokeUser(String accessKey, String secretKey);
+    User getInvokeUser(String accessKey);
 }

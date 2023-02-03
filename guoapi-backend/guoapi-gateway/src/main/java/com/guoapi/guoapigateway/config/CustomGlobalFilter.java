@@ -1,7 +1,13 @@
 package com.guoapi.guoapigateway.config;
 
+import com.guoapi.common.model.entity.InterfaceInfo;
+import com.guoapi.common.model.entity.User;
+import com.guoapi.common.service.InnerInterfaceInfoService;
+import com.guoapi.common.service.InnerUserInterfaceInfoService;
+import com.guoapi.common.service.InnerUserService;
 import com.guoapi.guoapiclientsdk.utils.SignUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.dubbo.config.annotation.DubboReference;
 import org.reactivestreams.Publisher;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
@@ -20,7 +26,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -40,6 +45,25 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
 
 
     /**
+     * 查询用户信息
+     */
+    @DubboReference
+    private InnerUserService innerUserService;
+
+    /**
+     * 查询用户接口信息
+     */
+    @DubboReference
+    private InnerUserInterfaceInfoService innerUserInterfaceInfoService;
+
+    /**
+     * 查询接口信息
+     */
+    @DubboReference
+    private InnerInterfaceInfoService innerInterfaceInfoService;
+
+
+    /**
      * 全局过滤器
      *
      * @param exchange
@@ -50,6 +74,8 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         // 1、全局请求日志
         ServerHttpRequest request = exchange.getRequest();
+        String path = request.getPath().value();// 请求路径
+        String method = request.getMethodValue();// 请求方法
         log.info("请求唯一标识：{}", request.getId());
         log.info("请求目标路径：{}", request.getPath().value());
         log.info("请求方法：{}", request.getMethodValue());
@@ -69,10 +95,12 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
         String timestamp = headers.getFirst("timestamp");
         String sign = headers.getFirst("sign");
         String body = headers.getFirst("body");
-        // todo 实际情况应查询数据库查看用户是否拥有ak
-        if (!"key".equals(accessKey)) {
+        // 从数据库中查出 ak 对应的用户并取出对应的 sk
+        User user = innerUserService.getInvokeUser(accessKey);
+        if (user == null) {
             return noAuthHandler(response);
         }
+        String secretKey = user.getSecretKey();
         if (nonce == null || Long.parseLong(nonce) > 10000L) {
             return noAuthHandler(response);
         }
@@ -81,20 +109,22 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
         if (timestamp == null || currentTime - Long.parseLong(timestamp) >= FIVE_MINUTES) {
             return noAuthHandler(response);
         }
-        // todo 实际情况应从数据库中查出 secretKey
-        String secretKey = "secretKey";
         String serverSign = SignUtils.genSign(body, secretKey);
         if (!serverSign.equals(sign)) {
             return noAuthHandler(response);
         }
 
-        // 4、校验请求的接口是否在数据库中存在
-        // todo 因为是在网关层，不建议再写一遍逻辑，可以通过远程调用来使用别的模块中现成的查询方法
+        // 4、校验请求的接口是否在数据库中存在，以及请求的方法是否匹配
+        InterfaceInfo interfaceInfo = innerInterfaceInfoService.getInterfaceInfo(path, method);
+        if (interfaceInfo == null) {
+            // 接口不存在，404 错误
+            response.setStatusCode(HttpStatus.NOT_FOUND);
+            return response.setComplete();
+        }
 
         // 5、请求转发，调用模拟接口 -> 6、响应日志
-        this.responseLog(exchange, chain);
-
-        return chain.filter(exchange);
+        // return chain.filter(exchange);
+        return responseLog(exchange, chain, interfaceInfo.getId(), user.getId());
     }
 
     /**
@@ -102,9 +132,11 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
      *
      * @param exchange
      * @param chain
+     * @param interfaceInfoId
+     * @param userId
      * @return
      */
-    public Mono<Void> responseLog(ServerWebExchange exchange, GatewayFilterChain chain) {
+    public Mono<Void> responseLog(ServerWebExchange exchange, GatewayFilterChain chain, Long interfaceInfoId, Long userId) {
         try {
             ServerHttpResponse originalResponse = exchange.getResponse();
             DataBufferFactory bufferFactory = originalResponse.bufferFactory();
@@ -119,8 +151,11 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
                         //log.info("body instanceof Flux: {}", (body instanceof Flux));
                         if (body instanceof Flux) {
                             Flux<? extends DataBuffer> fluxBody = Flux.from(body);
-                            //
+                            // 往返回值中写数据
                             return super.writeWith(fluxBody.map(dataBuffer -> {
+                                // 7、调用成功，接口调用次数 + 1
+                                innerUserInterfaceInfoService.invokeCount(interfaceInfoId,userId);
+
                                 byte[] content = new byte[dataBuffer.readableByteCount()];
                                 dataBuffer.read(content);
                                 DataBufferUtils.release(dataBuffer);// 释放掉内存
@@ -128,13 +163,9 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
                                 // 构建日志
                                 String data = new String(content, StandardCharsets.UTF_8);//data
                                 log.info("响应结果：{}", data);
-
-                                // todo 7、调用成功，接口调用次数 + 1
-
                                 return bufferFactory.wrap(content);
                             }));
-                        }
-                        else {
+                        } else {
                             // 8、调用失败，返回一个规范的错误码
                             log.error("<--- {} 响应code异常", getStatusCode());
                         }
@@ -157,6 +188,12 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
         return 0;
     }
 
+    /**
+     * 自定义统一 403 状态处理
+     *
+     * @param response
+     * @return
+     */
     private Mono<Void> noAuthHandler(ServerHttpResponse response) {
         response.setStatusCode(HttpStatus.FORBIDDEN);
         return response.setComplete();
