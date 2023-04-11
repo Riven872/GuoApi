@@ -79,3 +79,26 @@
 
 1. 通过断言拦截特定规则的请求，负载转发到第三方接口所在的服务
 2. 将请求头中的参数取出来生成签名，进行比对。鉴权失败或调用失败时，标记 403 状态码并进行返回
+
+
+
+### 三、优化部分
+
+#### 1、Redis + Session 完成服务器间的 Session 共享（实际是 Redis 单独处理）
+
+1. 在主启动类上添加注解 `@EnableRedisHttpSession`，并在该注解内设置过期时间、自定义分组 key 等，也可以在 yml 中设置过期时间和自定义分组 key 值等，效果与注解相同，若同时配置则注解生效
+
+2. 需要手动设置 Session 专用的 Redis 序列化器，将值转换为 Json 格式
+
+    ```java
+    @Bean
+    public RedisSerializer<Object> springSessionDefaultRedisSerializer() {
+        return new GenericJackson2JsonRedisSerializer();
+    }
+    ```
+
+3. 采用该方法会导致一些额外的 session 信息不会在用户注销时及时清除，因此采用手动 Redis 的方法来完成单点登录
+
+    1. 用户登录时，将信息放到 Redis 中，并设置过期时间
+    2. 新增拦截器，每次请求时检查 Redis 中是否有用户信息，如果有则续期，无则放行
+    3. todo 其中设置键值时，随机生成令牌，并方法请求头中，取值时，使用请求头中的令牌生成 key，（这个明天前端实现，必须实现，可以用来区别登录的不同用户）

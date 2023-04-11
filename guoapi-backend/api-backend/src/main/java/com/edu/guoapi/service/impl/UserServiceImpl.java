@@ -21,17 +21,17 @@ import com.edu.guoapi.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static com.edu.guoapi.constant.UserConstant.ADMIN_ROLE;
-import static com.edu.guoapi.constant.UserConstant.USER_LOGIN_STATE;
 
 /**
  * 用户服务实现类
@@ -44,6 +44,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Resource
     private UserMapper userMapper;
+
+    @Resource
+    private RedisTemplate<String, Object> redisTemplate;
 
     /**
      * 盐值，混淆密码
@@ -142,7 +145,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户不存在或密码错误");
         }
         // 3. 记录用户的登录态
-        request.getSession().setAttribute(USER_LOGIN_STATE, user);
+        redisTemplate.opsForValue().set("USER_LOGIN", user);
+        redisTemplate.expire("USER_LOGIN", 1, TimeUnit.DAYS);
+        // request.getSession().setAttribute(USER_LOGIN_STATE, user);
         return user;
     }
 
@@ -155,17 +160,19 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Override
     public User getLoginUser(HttpServletRequest request) {
         // 先判断是否已登录
-        Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
+        Object userObj = redisTemplate.opsForValue().get("USER_LOGIN");
+        // Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
         User currentUser = (User) userObj;
         if (currentUser == null || currentUser.getId() == null) {
             throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR);
         }
         // 从数据库查询（追求性能的话可以注释，直接走缓存）
-        long userId = currentUser.getId();
-        currentUser = this.getById(userId);
-        if (currentUser == null) {
-            throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR);
-        }
+        // todo 直接从缓存中取用户数据
+        // long userId = currentUser.getId();
+        // currentUser = this.getById(userId);
+        // if (currentUser == null) {
+        //     throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR);
+        // }
         return currentUser;
     }
 
@@ -178,7 +185,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Override
     public boolean isAdmin(HttpServletRequest request) {
         // 仅管理员可查询
-        Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
+        Object userObj = redisTemplate.opsForValue().get("USER_LOGIN");
         User user = (User) userObj;
         return user == null || !ADMIN_ROLE.equals(user.getUserRole());
     }
@@ -190,11 +197,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      */
     @Override
     public boolean userLogout(HttpServletRequest request) {
-        if (request.getSession().getAttribute(USER_LOGIN_STATE) == null) {
+        if (redisTemplate.opsForValue().get("USER_LOGIN") == null) {
             throw new BusinessException(ErrorCode.OPERATION_ERROR, "未登录");
         }
         // 移除登录态
-        request.getSession().removeAttribute(USER_LOGIN_STATE);
+        // request.getSession().removeAttribute(USER_LOGIN_STATE);
+        redisTemplate.delete("USER_LOGIN");
         return true;
     }
 
