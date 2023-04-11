@@ -1,23 +1,24 @@
-package com.guoapi.guoapiclientsdk;
+package com.edu.guoapi;
 
-import com.guoapi.guoapiclientsdk.client.GuoApiClient;
+import com.edu.guoapi.client.GuoApiClient;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 
-/**
- *
- * @author rivenzhou
- */
 @Configuration
-@ConfigurationProperties("guoapi.client")
 @Data
-@ComponentScan
-public class GuoApiClientConfig {
+// @ComponentScan
+@ConfigurationProperties("guoapi.client")
+public class GuoApiClientAutoConfiguration {
+    /**
+     * 用户授权名
+     */
     private String accessKey;
 
+    /**
+     * 用户授权密钥
+     */
     private String secretKey;
 
     @Bean
