@@ -1,0 +1,6 @@
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://101.43.124.198:3306/guoapi
+    username: guoapi
+    password: 8myN7EPFAExHwdf8
