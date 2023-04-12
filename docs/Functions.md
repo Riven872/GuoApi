@@ -111,3 +111,16 @@
 
 1. 所有有主启动类的模块进行 Package 打包，打包之前，将相应的依赖也提前 Package
 2. todo 使用 Maven 从 GitHub 拉取并一键部署
+
+#### 2、部署前端
+
+1. 资源已经打包了，但是 Nginx 报 404 没有找到资源，可以考虑加配置
+
+    ```nginx
+    location / {
+       try_files $uri $uri/ /index.html;
+       # $uri 貌似是当前用户请求的 url，可以考虑百度一下 try_files 的用法
+    }
+    ```
+
+    
