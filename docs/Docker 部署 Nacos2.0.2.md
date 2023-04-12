@@ -15,7 +15,7 @@
     ```properties
     spring.datasource.platform=mysql
     db.num=1
-    db.url.0=jdbc:mysql://101.43.124.198:3306//nacos_config?characterEncoding=utf8&connectTimeout=1000&socketTimeout=3000&autoReconnect=true&useUnicode=true&useSSL=false&serverTimezone=UTC?allowPublicKeyRetrieval=true
+    db.url.0=jdbc:mysql://101.43.124.198:3306/nacos_config?characterEncoding=utf8&connectTimeout=1000&socketTimeout=3000&autoReconnect=true&useUnicode=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&autoReconnect=true
     db.user=guoapi
     db.password=8myN7EPFAExHwdf8
      

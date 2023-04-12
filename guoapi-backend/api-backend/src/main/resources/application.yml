@@ -1,12 +1,12 @@
 spring:
   application:
     name: guoapi-backend
-  profiles:
-    active: dev
+#  profiles:
+#    active: dev
   # DataSource Config
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://101.43.124.198:3306/guoapi
+    url: jdbc:mysql://101.43.124.198:3306/guoapi?characterEncoding=utf8&connectTimeout=1000&socketTimeout=3000&autoReconnect=true&useUnicode=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&autoReconnect=true
     username: guoapi
     password: 8myN7EPFAExHwdf8
   mvc:
@@ -54,9 +54,7 @@ dubbo:
     name: guoapi-backend
   protocol:
     name: dubbo
-    port: -1
+    port: 20881
   registry:
     id: nacos-registry
-    address: nacos://localhost:8848
-  consumer:
-    check: false
+    address: nacos://101.43.124.198:8848
