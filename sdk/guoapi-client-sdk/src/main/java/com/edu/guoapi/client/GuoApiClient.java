@@ -6,6 +6,9 @@ import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpResponse;
 import cn.hutool.http.HttpUtil;
 import cn.hutool.json.JSONUtil;
+import com.edu.guoapi.utils.Params2JsonUtils;
+import com.google.gson.JsonElement;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -73,6 +76,30 @@ public class GuoApiClient {
                 .execute();
         String body = response.body();
         return body;
+    }
+
+    /**
+     * 随机输出一句冷笑话
+     * charset 返回编码类型[gbk|utf-8]默认utf-8
+     * encode 返回格式类型[text|js|json]默认text
+     *
+     * @return 返回的状态码
+     */
+    public String randomMessage(String params) {
+        String charset, encode;
+        HttpRequest request = HttpRequest.get(GATEWAY_HOST + "/invoke/randomMessage");
+        if (StringUtils.isNotBlank(params)) {
+            JsonElement jsonParams = Params2JsonUtils.getJsonParams(params);
+            charset = jsonParams.getAsJsonObject().get("charset").getAsString();
+            encode = jsonParams.getAsJsonObject().get("encode").getAsString();
+            // 不传参时使用默认参数
+            request = StringUtils.isNotBlank(charset) ? request.form("charset", charset) : request.form("charset", "utf-8");
+            request = StringUtils.isNotBlank(encode) ? request.form("encode", encode) : request.form("encode", "text");
+        }
+
+        return request.addHeaders(getHeaderMap(params))
+                .execute()
+                .body();
     }
 
     // region 留存

@@ -7,14 +7,14 @@ spring:
   cloud:
     nacos:
       discovery:
-        server-addr: 101.43.124.198:8848
+        server-addr: localhost:8848
     gateway:
       routes:
         - id: api_route1
-#          uri: http://localhost:9528 # 若断言匹配，则转发到 http://localhost:9101
+#          uri: http://localhost:9101 # 若断言匹配，则转发到 http://localhost:9101
           uri: lb://guoapi-test  # 若断言匹配，则负载的转发到注册中心中的 guoapi-test 服务名上
           predicates:
-            - Path=/api/**
+            - Path=/invoke/**
 
 logging:
   level:
@@ -31,4 +31,4 @@ dubbo:
     port: 20880
   registry:
     id: nacos-registry
-    address: nacos://101.43.124.198:8848
+    address: nacos://localhost:8848

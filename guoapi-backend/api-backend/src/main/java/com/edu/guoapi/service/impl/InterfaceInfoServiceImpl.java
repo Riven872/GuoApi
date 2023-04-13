@@ -20,9 +20,11 @@ import com.edu.guoapi.model.entity.User;
 import com.edu.guoapi.model.enums.InterfaceInfoStatusEnum;
 import com.edu.guoapi.service.InterfaceInfoService;
 import com.edu.guoapi.service.UserService;
+import com.google.gson.JsonSyntaxException;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -62,7 +64,7 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
 
         // 创建时，所有参数必须非空
         if (add) {
-            if (StringUtils.isAnyBlank(name,description, url ,requestHeader,responseHeader,method)) {
+            if (StringUtils.isAnyBlank(name, description, url, requestHeader, responseHeader, method)) {
                 throw new BusinessException(ErrorCode.PARAMS_ERROR);
             }
         }
@@ -75,7 +77,7 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
      * 添加接口
      *
      * @param interfaceInfoAddRequest 接口信息
-     * @param request 用户请求
+     * @param request                 用户请求
      * @return 接口主键
      */
     @Override
@@ -98,8 +100,9 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
 
     /**
      * 删除接口
+     *
      * @param deleteRequest 要删除的接口的信息
-     * @param request 用户请求
+     * @param request       用户请求
      * @return 是否删除成功
      */
     @Override
@@ -219,6 +222,8 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
      */
     @Override
     public boolean onlineInterfaceInfo(IdRequest idRequest) {
+        // todo 全局变量来判定接口是否可以调通，但是有些接口调用不成功返回错误信息是字符串，因此这里要优化判定接口没有调用的方法
+        String res = null;
         // 判断传参是否规范
         if (idRequest == null || idRequest.getId() < 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
@@ -230,9 +235,14 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
         }
         // 判断接口是否处于可调用状态（使用自定义的 SDK）
-        // todo 这里进行需要查询出接口的地址，并进行一次调用测试该接口是否处于可调通状态
-        String resp = guoApiClient.testUrl(oldInterfaceInfo.getRequestParams());
-        if (StringUtils.isBlank(resp)) {
+        //todo 这里进行需要查询出接口的地址，并进行一次调用测试该接口是否处于可调通状态，考虑根据查询出来的 url 动态（或者接口的名称？）的去匹配对应的方法
+        if (oldInterfaceInfo.getUrl().contains("randomMessage")) {
+            res = guoApiClient.randomMessage(oldInterfaceInfo.getRequestParams());
+        }
+        if (oldInterfaceInfo.getUrl().contains("test")) {
+            res = guoApiClient.testUrl(oldInterfaceInfo.getRequestParams());
+        }
+        if (StringUtils.isBlank(res)) {
             throw new BusinessException(ErrorCode.OPERATION_ERROR, "接口状态不可调用");
         }
 
@@ -275,7 +285,10 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
      * @return 远程接口返回值
      */
     @Override
+    @Transactional
     public Object invokeInterfaceInfo(InterfaceInfoInvokeRequest interfaceInfoInvokeRequest, HttpServletRequest request) {
+        // todo 全局变量来判定接口是否可以调通，但是有些接口调用不成功返回错误信息是字符串，因此这里要优化判定接口没有调用的方法
+        String res = null;
         // 判断传参是否规范
         if (interfaceInfoInvokeRequest == null || interfaceInfoInvokeRequest.getId() <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
@@ -297,14 +310,19 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
         String secretKey = loginUser.getSecretKey();
 
         GuoApiClient client = new GuoApiClient(accessKey, secretKey);
-        String res = client.testUrl(userRequestParams);
-
-
-        // Gson gson = new Gson();
-        // com.guoapi.guoapiclientsdk.model.User user = gson.fromJson(userRequestParams, com.guoapi.guoapiclientsdk.model.User.class);
-        // 测试调用接口
-        // String post = client.getUsernameByPost(user);
-        // return ResultUtils.success(post);
+        try {
+            if (oldInterfaceInfo.getUrl().contains("randomMessage")) {
+                res = client.randomMessage(userRequestParams);
+            }
+            if (oldInterfaceInfo.getUrl().contains("test")){
+                res = client.testUrl(userRequestParams);
+            }
+        } catch (JsonSyntaxException exception) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "参数不为 Json 格式");
+        }
+        if (StringUtils.isBlank(res)){
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "接口错误，请联系管理员");
+        }
         return res;
     }
 }

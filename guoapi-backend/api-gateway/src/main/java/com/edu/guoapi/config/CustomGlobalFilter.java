@@ -3,7 +3,6 @@ package com.edu.guoapi.config;
 import com.edu.guoapi.interfaces.InterfaceInfo.RPCInterfaceInfo;
 import com.edu.guoapi.interfaces.User.RPCUser;
 import com.edu.guoapi.interfaces.UserInterfaceInfo.RPCUserInterfaceInfo;
-import com.edu.guoapi.model.entity.InterfaceInfo;
 import com.edu.guoapi.model.entity.User;
 import com.edu.guoapi.utils.SignUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -84,9 +83,9 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
 
         // 2、访问控制，黑白名单（直接设置状态码将请求拦截掉并返回）
         ServerHttpResponse response = exchange.getResponse();
-        if (!IP_WHITE_LIST.contains(request.getLocalAddress())) {
-            return noAuthHandler(response);
-        }
+        // if (!IP_WHITE_LIST.contains(request.getLocalAddress())) {
+        //     return noAuthHandler(response);
+        // }
 
         // 3、用户鉴权（判断 ak、sk 是否合法）
         HttpHeaders headers = request.getHeaders();
@@ -94,7 +93,7 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
         String nonce = headers.getFirst("nonce");
         String timestamp = headers.getFirst("timestamp");
         String sign = headers.getFirst("sign");
-        String body = headers.getFirst("body");
+        String body = headers.getFirst("body") == null ? headers.getFirst("body") : null;
         // 从数据库中查出 ak 对应的用户并取出对应的 sk
         User user = rpcUser.getInvokeUser(accessKey);
         if (user == null) {
@@ -115,16 +114,17 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
         }
 
         // 4、校验请求的接口是否在数据库中存在，以及请求的方法是否匹配
-        InterfaceInfo interfaceInfo = rpcInterfaceInfo.getInterfaceInfo(path, method);
-        if (interfaceInfo == null) {
-            // 接口不存在，404 错误
-            response.setStatusCode(HttpStatus.NOT_FOUND);
-            return response.setComplete();
-        }
+        // 接口状态已经在应用层判断了，因此这里注释掉
+        // InterfaceInfo interfaceInfo = rpcInterfaceInfo.getInterfaceInfo(path, method);
+        // if (interfaceInfo == null) {
+        //     // 接口不存在，404 错误
+        //     response.setStatusCode(HttpStatus.NOT_FOUND);
+        //     return response.setComplete();
+        // }
 
         // 5、请求转发，调用模拟接口 -> 6、响应日志
         // return chain.filter(exchange);
-        return responseLog(exchange, chain, interfaceInfo.getId(), user.getId());
+        return responseLog(exchange, chain);
     }
 
     /**
@@ -132,11 +132,9 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
      *
      * @param exchange
      * @param chain
-     * @param interfaceInfoId
-     * @param userId
      * @return
      */
-    public Mono<Void> responseLog(ServerWebExchange exchange, GatewayFilterChain chain, Long interfaceInfoId, Long userId) {
+    public Mono<Void> responseLog(ServerWebExchange exchange, GatewayFilterChain chain) {
         try {
             ServerHttpResponse originalResponse = exchange.getResponse();
             DataBufferFactory bufferFactory = originalResponse.bufferFactory();
@@ -154,7 +152,7 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
                             // 往返回值中写数据
                             return super.writeWith(fluxBody.map(dataBuffer -> {
                                 // todo 7、调用成功时，可以新开一个线程发送到 MQ 中。接口调用次数 + 1
-                                rpcUserInterfaceInfo.invokeCount(interfaceInfoId,userId);
+                                // rpcUserInterfaceInfo.invokeCount(interfaceInfoId,userId);
 
                                 byte[] content = new byte[dataBuffer.readableByteCount()];
                                 dataBuffer.read(content);

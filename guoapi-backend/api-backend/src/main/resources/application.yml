@@ -9,6 +9,8 @@ spring:
     url: jdbc:mysql://101.43.124.198:3306/guoapi?characterEncoding=utf8&connectTimeout=1000&socketTimeout=3000&autoReconnect=true&useUnicode=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&autoReconnect=true
     username: guoapi
     password: 8myN7EPFAExHwdf8
+    hikari:
+      max-lifetime: 120000
   mvc:
     pathmatch:
       matching-strategy: ANT_PATH_MATCHER
@@ -57,4 +59,4 @@ dubbo:
     port: 20881
   registry:
     id: nacos-registry
-    address: nacos://101.43.124.198:8848
+    address: nacos://localhost:8848
