@@ -141,6 +141,7 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
 
             HttpStatus statusCode = originalResponse.getStatusCode();
 
+            //todo 这里的返回码同样是本地接口，不是第三方的
             if (statusCode == HttpStatus.OK) {
                 ServerHttpResponseDecorator decoratedResponse = new ServerHttpResponseDecorator(originalResponse) {
                     // 等调用完转发的接口之后才会响应并执行

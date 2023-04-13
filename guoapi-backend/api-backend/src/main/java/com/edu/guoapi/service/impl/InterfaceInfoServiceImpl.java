@@ -22,6 +22,7 @@ import com.edu.guoapi.service.InterfaceInfoService;
 import com.edu.guoapi.service.UserService;
 import com.google.gson.JsonSyntaxException;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -223,7 +224,7 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
     @Override
     public boolean onlineInterfaceInfo(IdRequest idRequest) {
         // todo 全局变量来判定接口是否可以调通，但是有些接口调用不成功返回错误信息是字符串，因此这里要优化判定接口没有调用的方法
-        String res = null;
+        ImmutablePair<Integer, String> res = null;
         // 判断传参是否规范
         if (idRequest == null || idRequest.getId() < 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
@@ -240,10 +241,11 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
             res = guoApiClient.randomMessage(oldInterfaceInfo.getRequestParams());
         }
         if (oldInterfaceInfo.getUrl().contains("test")) {
-            res = guoApiClient.testUrl(oldInterfaceInfo.getRequestParams());
+            // res = guoApiClient.testUrl(oldInterfaceInfo.getRequestParams());
         }
-        if (StringUtils.isBlank(res)) {
-            throw new BusinessException(ErrorCode.OPERATION_ERROR, "接口状态不可调用");
+
+        if (res == null || res.getLeft() != 200) {
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "接口处于不可调用状态，请查看日志");
         }
 
         InterfaceInfo interfaceInfo = new InterfaceInfo();
@@ -288,7 +290,7 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
     @Transactional
     public Object invokeInterfaceInfo(InterfaceInfoInvokeRequest interfaceInfoInvokeRequest, HttpServletRequest request) {
         // todo 全局变量来判定接口是否可以调通，但是有些接口调用不成功返回错误信息是字符串，因此这里要优化判定接口没有调用的方法
-        String res = null;
+        ImmutablePair<Integer, String> res = null;
         // 判断传参是否规范
         if (interfaceInfoInvokeRequest == null || interfaceInfoInvokeRequest.getId() <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
@@ -315,15 +317,18 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
                 res = client.randomMessage(userRequestParams);
             }
             if (oldInterfaceInfo.getUrl().contains("test")){
-                res = client.testUrl(userRequestParams);
+                // res = client.testUrl(userRequestParams);
             }
         } catch (JsonSyntaxException exception) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "参数不为 Json 格式");
         }
-        if (StringUtils.isBlank(res)){
-            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "接口错误，请联系管理员");
+        if (res == null) {
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR,"接口错误，请联系管理员");
         }
-        return res;
+        if (res.getLeft() != 200){
+            throw new BusinessException(res.getLeft(), res.getRight());
+        }
+        return res.getRight();
     }
 }
 

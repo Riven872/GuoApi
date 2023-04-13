@@ -4,11 +4,12 @@ package com.edu.guoapi.client;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpResponse;
-import cn.hutool.http.HttpUtil;
 import cn.hutool.json.JSONUtil;
+import com.edu.guoapi.utils.HttpResponseDataUtils;
 import com.edu.guoapi.utils.Params2JsonUtils;
 import com.google.gson.JsonElement;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -83,9 +84,9 @@ public class GuoApiClient {
      * charset 返回编码类型[gbk|utf-8]默认utf-8
      * encode 返回格式类型[text|js|json]默认text
      *
-     * @return 返回的状态码
+     * @return 状态码和响应值
      */
-    public String randomMessage(String params) {
+    public ImmutablePair<Integer, String> randomMessage(String params) {
         String charset, encode;
         HttpRequest request = HttpRequest.get(GATEWAY_HOST + "/invoke/randomMessage");
         if (StringUtils.isNotBlank(params)) {
@@ -97,10 +98,15 @@ public class GuoApiClient {
             request = StringUtils.isNotBlank(encode) ? request.form("encode", encode) : request.form("encode", "text");
         }
 
-        return request.addHeaders(getHeaderMap(params))
-                .execute()
-                .body();
+        HttpResponse response = request.addHeaders(getHeaderMap(params)).execute();
+        return HttpResponseDataUtils.resData(response);
     }
+
+    // public String randomAvatar(String params) {
+    //     String method;// 输出壁纸端[mobile(手机端),pc（电脑端）,zsy（手机电脑自动判断）]默认为pc
+    //     String 	lx;// 输出头像类型[a1（男头）|b1（女头）|c1（动漫头像）|c2（动漫女头）|c3（动漫男头）]默认为c1
+    //     String format;// 输出壁纸格式[json|images]默认为images
+    // }
 
     // region 留存
     // /**
