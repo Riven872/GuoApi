@@ -10,6 +10,7 @@ import React, { useCallback } from 'react';
 import { flushSync } from 'react-dom';
 import HeaderDropdown from '../HeaderDropdown';
 import { userLogoutUsingPOST } from '@/services/guoapi-backend/userController';
+import { getInitialState } from '@/app';
 
 export type GlobalHeaderRightProps = {
   menu?: boolean;
@@ -17,7 +18,7 @@ export type GlobalHeaderRightProps = {
 
 const Name = () => {
   const { initialState } = useModel('@@initialState');
-  const { currentUser } = initialState || {};
+  const currentUser = initialState?.loginUser;
 
   const nameClassName = useEmotionCss(({ token }) => {
     return {
@@ -38,7 +39,7 @@ const Name = () => {
 
 const AvatarLogo = () => {
   const { initialState } = useModel('@@initialState');
-  const { currentUser } = initialState || {};
+  const currentUser = initialState?.loginUser;
 
   const avatarClassName = useEmotionCss(({ token }) => {
     return {
@@ -51,8 +52,7 @@ const AvatarLogo = () => {
       },
     };
   });
-
-  return <Avatar size="small" className={avatarClassName} src={currentUser?.avatar} alt="avatar" />;
+  return <Avatar size="small" className={avatarClassName} src={currentUser?.userAvatar} alt="avatar" />;
 };
 
 const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu }) => {
@@ -60,7 +60,9 @@ const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu }) => {
    * 退出登录，并且将当前的 url 保存
    */
   const loginOut = async () => {
-    await outLogin();
+    // await outLogin();
+    await userLogoutUsingPOST();
+    debugger
     const { search, pathname } = window.location;
     const urlParams = new URL(window.location.href).searchParams;
     /** 此方法会跳转到 redirect 参数所在的位置 */
@@ -94,15 +96,16 @@ const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu }) => {
 
   const onMenuClick = useCallback(
     (event: MenuInfo) => {
+      debugger
       const { key } = event;
       if (key === 'logout') {
         flushSync(() => {
           setInitialState((s) => ({ ...s, currentUser: undefined }));
+          loginOut();
+          // userLogoutUsingPOST();
+          return;
         });
-        userLogoutUsingPOST();
-        return;
       }
-      history.push(`/account/${key}`);
     },
     [setInitialState],
   );
@@ -119,13 +122,13 @@ const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({ menu }) => {
     </span>
   );
 
+  const currentUser = initialState;
+
   if (!initialState) {
     return loading;
   }
 
-  const { currentUser } = initialState;
-
-  if (!currentUser || !currentUser.name) {
+  if (!currentUser) {
     return loading;
   }
 
