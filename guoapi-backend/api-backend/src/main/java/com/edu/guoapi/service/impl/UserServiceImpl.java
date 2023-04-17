@@ -32,6 +32,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static com.edu.guoapi.constant.UserConstant.ADMIN_ROLE;
+import static com.edu.guoapi.constant.UserConstant.USER_LOGIN_STATE;
 
 /**
  * 用户服务实现类
@@ -147,7 +148,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         // 3. 记录用户的登录态
         redisTemplate.opsForValue().set("USER_LOGIN", user);
         redisTemplate.expire("USER_LOGIN", 1, TimeUnit.DAYS);
-        // request.getSession().setAttribute(USER_LOGIN_STATE, user);
+        request.getSession().setAttribute(USER_LOGIN_STATE, user);
         return user;
     }
 
@@ -201,7 +202,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             throw new BusinessException(ErrorCode.OPERATION_ERROR, "未登录");
         }
         // 移除登录态
-        // request.getSession().removeAttribute(USER_LOGIN_STATE);
+        request.getSession().removeAttribute(USER_LOGIN_STATE);
         redisTemplate.delete("USER_LOGIN");
         return true;
     }
