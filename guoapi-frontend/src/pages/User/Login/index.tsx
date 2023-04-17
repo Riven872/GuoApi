@@ -108,12 +108,15 @@ const Login: React.FC = () => {
       // 登录
       const res = await userLoginUsingPOST({ ...values});
       if (res.data) {
-        const urlParams = new URL(window.location.href).searchParams;
-        history.push(urlParams.get('redirect') || '/');
-        setInitialState({
-          loginUser: res.data
-        });
-        return;
+        flushSync(() => {
+          debugger;
+          const urlParams = new URL(window.location.href).searchParams;
+          history.push(urlParams.get('redirect') || '/');
+          setInitialState({
+            loginUser: res.data
+          });
+          return;
+        })
       }
       // 如果失败去设置用户错误信息
       // setUserLoginState(msg);
