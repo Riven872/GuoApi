@@ -33,7 +33,12 @@ export const requestConfig: RequestConfig = {
   requestInterceptors: [
     (config: RequestOptions) => {
       // 拦截请求配置，进行个性化处理。
-      const url = config?.url?.concat('?token = 123');
+      const url = config?.url?.concat('');
+      // let redisToken = sessionStorage.getItem("RedisToken");
+      // debugger
+      // if (url != "/api/user/login" && redisToken) {
+      //   config.headers.common['RedisToken'] = redisToken;
+      // }
       return { ...config, url };
     },
   ],

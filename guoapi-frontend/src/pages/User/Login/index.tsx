@@ -108,8 +108,8 @@ const Login: React.FC = () => {
       // 登录
       const res = await userLoginUsingPOST({ ...values});
       if (res.data) {
+        // sessionStorage.setItem("RedisToken", JSON.stringify(res.data?.userAccount).toString());
         flushSync(() => {
-          debugger;
           const urlParams = new URL(window.location.href).searchParams;
           history.push(urlParams.get('redirect') || '/');
           setInitialState({

@@ -18,6 +18,7 @@ import com.edu.guoapi.model.dto.user.UserUpdateRequest;
 import com.edu.guoapi.model.entity.User;
 import com.edu.guoapi.model.vo.UserVO;
 import com.edu.guoapi.service.UserService;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -146,9 +147,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户不存在或密码错误");
         }
         // 3. 记录用户的登录态
-        redisTemplate.opsForValue().set("USER_LOGIN", user);
-        redisTemplate.expire("USER_LOGIN", 1, TimeUnit.DAYS);
-        request.getSession().setAttribute(USER_LOGIN_STATE, user);
+        String sessionId = request.getSession().getId();
+        redisTemplate.opsForValue().set(USER_LOGIN_STATE + sessionId, user);
+        redisTemplate.expire(USER_LOGIN_STATE + sessionId, 1, TimeUnit.DAYS);
 
         // 4、前端返回用户
         UserVO userVO = new UserVO();
@@ -166,7 +167,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Override
     public User getLoginUser(HttpServletRequest request) {
         // 先判断是否已登录
-        Object userObj = redisTemplate.opsForValue().get("USER_LOGIN");
+        String sessionId = request.getSession().getId();
+        Object userObj = redisTemplate.opsForValue().get(USER_LOGIN_STATE + sessionId);
         // Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
         User currentUser = (User) userObj;
         if (currentUser == null || currentUser.getId() == null) {
@@ -191,7 +193,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Override
     public boolean isAdmin(HttpServletRequest request) {
         // 仅管理员可查询
-        Object userObj = redisTemplate.opsForValue().get("USER_LOGIN");
+        String sessionId = request.getSession().getId();
+        Object userObj = redisTemplate.opsForValue().get(USER_LOGIN_STATE + sessionId);
         User user = (User) userObj;
         return user == null || !ADMIN_ROLE.equals(user.getUserRole());
     }
@@ -202,13 +205,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      * @param request
      */
     @Override
+    @SneakyThrows
     public boolean userLogout(HttpServletRequest request) {
-        if (redisTemplate.opsForValue().get("USER_LOGIN") == null) {
+        String sessionId = request.getSession().getId();
+        if (redisTemplate.opsForValue().get(USER_LOGIN_STATE + sessionId) == null) {
             throw new BusinessException(ErrorCode.OPERATION_ERROR, "未登录");
         }
         // 移除登录态
-        request.getSession().removeAttribute(USER_LOGIN_STATE);
-        redisTemplate.delete("USER_LOGIN");
+        request.logout();
+        redisTemplate.delete(USER_LOGIN_STATE + sessionId);
         return true;
     }
 
