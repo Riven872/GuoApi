@@ -145,4 +145,89 @@
     }
     ```
 
-    
+
+
+
+### 五、第三方接口说明
+
+#### 1、randomMessage
+
+1. 随机返回一句冷笑话
+
+2. 请求方式：get
+
+3. 实际请求地址：`https://api.btstu.cn/yan/api.php`
+
+4. 响应头：`text/html`、`application/json`
+
+5. 请求参数：
+
+    1. | 参数名  | 是否必填 | 参数类型 | 参数说明                              |
+        | ------- | -------- | -------- | ------------------------------------- |
+        | charset | 否       | string   | 返回编码类型（gbk、utf-8），默认utf-8 |
+        | encode  | 否       | string   | 返回格式类型（text、json），默认text  |
+
+6. 返回参数：
+
+    1. | 参数名 | 类型   | 说明         |
+        | ------ | ------ | ------------ |
+        | text   | string | 返回的一句话 |
+
+7. 请求与返回示例
+
+    1. | 请求示例                                                     | 返回示例                                                  |
+        | ------------------------------------------------------------ | --------------------------------------------------------- |
+        | 使用默认参数：`https://api.btstu.cn/yan/api.php`             | 这年头有些人靠脸吃饭，而有些人，靠不要脸吃饭。            |
+        | 使用 Json 参数：`https://api.btstu.cn/yan/api.php?charset=utf-8&encode=json` | {"text":"这年头有些人靠脸吃饭，而有些人，靠不要脸吃饭。"} |
+
+
+
+#### 2、randomACGPictures
+
+1. 随机返回一张二次元壁纸
+
+2. 请求方式：post
+
+3. 实际请求地址：`https://tenapi.cn/v2/acg`
+
+4. 请求头：`application/x-www-form-urlencoded`（因此不支持 Json 格式，只能通过表单进行 URL 拼接）
+
+5. 响应头：`image/*`、`application/json`
+
+6. 请求参数：
+
+    1. | 参数名 | 是否必填 | 参数类型 | 参数说明                             |
+        | ------ | -------- | -------- | ------------------------------------ |
+        | format | 否       | string   | 返回格式类型（图片、json），默认图片 |
+
+7. 返回参数：
+
+    1. | 参数名 | 参数类型 | 参数说明 |
+        | ------ | -------- | -------- |
+        | width  | int      | 图片宽度 |
+        | height | int      | 图片高度 |
+        | url    | string   | 图片地址 |
+
+8. 请求与返回示例
+
+    1. 使用默认参数：`https://tenapi.cn/v2/acg`
+
+        1. 返回数据：`https://tvax1.sinaimg.cn/large/9bd9b167gy1g4lhi9v5wdj21hc0xcamc.jpg`
+
+    2. 使用 Json 参数：`https://tenapi.cn/v2/acg?format=json`
+
+        1. 返回数据：
+
+            ```json
+            { 
+              "code": 200, 
+              "msg": "success", 
+              "data": { 
+                  "width": 1920, 
+                  "height": 1080, 
+                  "url": "https:\/\/cdn.cdnjson.com\/tvax3.sinaimg.cn\/large\/0072Vf1pgy1foxlnvil7zj31hc0u07lt.jpg" 
+                 } 
+            }
+            ```
+
+9. **注意：该远程接口如果不传参会自动重定向 302 到图片地址，因此第一次调用时需要根据 302 的响应头拿到重定向的地址**

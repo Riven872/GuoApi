@@ -243,7 +243,9 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
         if (oldInterfaceInfo.getUrl().contains("test")) {
             // res = guoApiClient.testUrl(oldInterfaceInfo.getRequestParams());
         }
-
+        if (oldInterfaceInfo.getUrl().contains("randomACGPictures")) {
+            res = guoApiClient.randomACGPictures();
+        }
         if (res == null || res.getLeft() != 200) {
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "接口处于不可调用状态，请查看日志");
         }
@@ -308,16 +310,16 @@ public class InterfaceInfoServiceImpl extends ServiceImpl<InterfaceInfoMapper, I
         }
         // 解析用户的 key 和传进来的参数
         User loginUser = userService.getLoginUser(request);
-        String accessKey = loginUser.getAccessKey();
-        String secretKey = loginUser.getSecretKey();
-
-        GuoApiClient client = new GuoApiClient(accessKey, secretKey);
+        // 此处可以直接使用配置在 yml 中的 ak 和 sk，避免一次查库
         try {
             if (oldInterfaceInfo.getUrl().contains("randomMessage")) {
-                res = client.randomMessage(userRequestParams);
+                res = guoApiClient.randomMessage(userRequestParams);
             }
             if (oldInterfaceInfo.getUrl().contains("test")){
-                // res = client.testUrl(userRequestParams);
+                // res = guoApiClient.testUrl(userRequestParams);
+            }
+            if (oldInterfaceInfo.getUrl().contains("randomACGPictures")) {
+                res = guoApiClient.randomACGPictures();
             }
         } catch (JsonSyntaxException exception) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "参数不为 Json 格式");

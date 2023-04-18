@@ -7,6 +7,8 @@ import { useParams } from '@umijs/max';
 import { Button, Card, Descriptions, Form, Input, message, Spin } from 'antd';
 import DescriptionsItem from 'antd/es/descriptions/Item';
 import React, { useEffect, useState } from 'react';
+import { Image } from 'antd';
+import moment, { localeData } from 'moment';
 
 /**
  * 主页
@@ -81,8 +83,8 @@ const Index: React.FC = () => {
             <DescriptionsItem label="请求参数">{data.requestParams}</DescriptionsItem>
             <DescriptionsItem label="请求头">{data.requestHeader}</DescriptionsItem>
             <DescriptionsItem label="响应头">{data.responseHeader}</DescriptionsItem>
-            <DescriptionsItem label="创建时间">{data.createTime}</DescriptionsItem>
-            <DescriptionsItem label="更新时间">{data.updateTime}</DescriptionsItem>
+            <DescriptionsItem label="创建时间">{moment(data.createTime).format('YYYY-MM-DD HH:mm:ss')}</DescriptionsItem>
+            <DescriptionsItem label="更新时间">{moment(data.updateTime).format('YYYY-MM-DD HH:mm:ss')}</DescriptionsItem>
           </Descriptions>
         ) : (
           <>接口不存在</>
@@ -100,7 +102,8 @@ const Index: React.FC = () => {
         </Form>
       </Card>
       <Card title="返回结果" loading={invokeLoading}>
-        { invokeRes }
+        {/\.(gif|jpe?g|png|webp|bmp)$/i.test(invokeRes) ? <Image width={400} src={invokeRes} /> : null}
+        {/\.(gif|jpe?g|png|webp|bmp)$/i.test(invokeRes) ? null : invokeRes}
       </Card>
     </PageContainer>
   );

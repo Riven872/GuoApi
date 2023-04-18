@@ -102,7 +102,16 @@ public class GuoApiClient {
         return HttpResponseDataUtils.resData(response);
     }
 
-    public ImmutablePair<Integer, String>
+    /**
+     * 随机返回二次元图片
+     *
+     * @return 状态码和响应值
+     */
+    public ImmutablePair<Integer, String> randomACGPictures() {
+        HttpRequest request = HttpRequest.get(GATEWAY_HOST + "/invoke/randomACGPictures");
+        HttpResponse response = request.addHeaders(getHeaderMap(null)).execute();
+        return HttpResponseDataUtils.resData(response);
+    }
 
     // public String randomAvatar(String params) {
     //     String method;// 输出壁纸端[mobile(手机端),pc（电脑端）,zsy（手机电脑自动判断）]默认为pc
