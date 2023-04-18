@@ -1,0 +1,8 @@
+spring:
+  profiles:
+    active: prod
+
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 101.43.124.198:8848
