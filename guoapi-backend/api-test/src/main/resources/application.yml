@@ -2,8 +2,6 @@ server:
   port: 9101
 
 spring:
-  profiles:
-    active: dev
   application:
     name: guoapi-test
   cloud:

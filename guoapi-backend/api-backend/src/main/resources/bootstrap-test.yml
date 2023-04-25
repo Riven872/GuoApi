@@ -1,0 +1,11 @@
+spring:
+  cloud:
+    nacos:
+      server-addr: 101.43.124.198:8848
+      config:
+        namespace: 17f446fb-2cf9-47fd-a64b-7ecd0b77f830
+        file-extension: yaml
+        enabled: true
+        refresh-enabled: true
+        group: TEST_PROPERTIES
+

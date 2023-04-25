@@ -2,14 +2,7 @@ server:
   port: 9000
 
 spring:
-  profiles:
-    active: dev
-  application:
-    name: guoapi-gateway
   cloud:
-    nacos:
-      discovery:
-        server-addr: localhost:8848
     gateway:
       routes:
         - id: api_route1
@@ -17,6 +10,8 @@ spring:
           uri: lb://guoapi-test  # 若断言匹配，则负载的转发到注册中心中的 guoapi-test 服务名上
           predicates:
             - Path=/invoke/**
+  profiles:
+    active: local
 
 logging:
   level:
@@ -24,13 +19,3 @@ logging:
       springframework:
         cloud:
           gateway: trace
-
-dubbo:
-  application:
-    name: dubbo-gateway
-  protocol:
-    name: dubbo
-    port: 20880
-  registry:
-    id: nacos-registry
-    address: nacos://localhost:8848
