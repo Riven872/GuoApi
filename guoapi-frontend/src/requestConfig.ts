@@ -25,8 +25,9 @@ interface ResponseStructure {
  * @doc https://umijs.org/docs/max/request#配置
  */
 export const requestConfig: RequestConfig = {
-  baseURL: 'http://localhost:9528',
+  // baseURL: 'http://localhost:9528',
   // baseURL: 'http://101.43.124.198:9528',
+  baseURL: 'http://guoapi.riven.fun',
   withCredentials: true,
 
   // 请求拦截器

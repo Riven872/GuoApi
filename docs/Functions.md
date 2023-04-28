@@ -145,6 +145,40 @@
     }
     ```
 
+#### 3、使用域名代替 ip 地址部署
+
+- 其中，前端的 BaseUrl 需要从 `http://101.43.124.198:9528` 修改为 `http://guoapi.riven.fun`
+- 即从需要指定 ip:port 到让 Nginx 做反向代理，代理到指定的后端地址
+- 注意 `location /` 对应的是前端所有的请求，`location /api` 对应的后端匹配的请求
+
+```nginx
+server
+{
+    listen 80;# 监听所有 http 请求
+    server_name guoapi.riven.fun;# 监听的 ip 换成域名
+    index index.php index.html index.htm default.php default.htm default.html;
+    root /www/wwwroot/guoapi/frontend;
+
+    # / 对应前端的请求
+    location / {
+      try_files $uri $uri/ /index.html;
+    }
+
+    # /api 对应后端的请求，将 /api 为前缀的后端请求转发到对应的 ip:port
+    location /api {
+      proxy_set_header Host $host;
+      proxy_set_header X-Real-IP $remote_addr;
+      proxy_set_header REMOTE-HOST $remote_addr;
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      add_header Access-Control-Allow-Methods *;
+      add_header Access-Control-Allow-Origin $http_origin;
+      proxy_pass http://101.43.124.198:9528;# 反向代理到指定的后端地址
+    }
+}
+```
+
+
+
 
 
 
