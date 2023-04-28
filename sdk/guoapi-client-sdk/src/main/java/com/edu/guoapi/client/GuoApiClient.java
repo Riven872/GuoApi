@@ -8,6 +8,8 @@ import cn.hutool.json.JSONUtil;
 import com.edu.guoapi.utils.HttpResponseDataUtils;
 import com.edu.guoapi.utils.Params2JsonUtils;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonSyntaxException;
+import lombok.SneakyThrows;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 
@@ -33,13 +35,19 @@ public class GuoApiClient {
     private final String secretKey;
 
     /**
+     * 用户手动指定网关地址
+     */
+    private final String gatewayAddr;
+
+    /**
      * 请求到指定的网关，经过网关过滤
      */
-    public static final String GATEWAY_HOST = "http://localhost:9000";
+    // public static final String GATEWAY_HOST = "http://localhost:9000";
 
-    public GuoApiClient(String accessKey, String secretKey) {
+    public GuoApiClient(String accessKey, String secretKey, String gatewayAddr) {
         this.accessKey = accessKey;
         this.secretKey = secretKey;
+        this.gatewayAddr = gatewayAddr;
     }
 
 
@@ -53,7 +61,7 @@ public class GuoApiClient {
         HashMap<String, Object> map = new HashMap<>();
         map.put("name", requestParams);
         String res = HttpRequest
-                .get(GATEWAY_HOST + "/api/test/get")
+                .get(gatewayAddr + "/api/test/get")
                 .form(map)
                 .addHeaders(getHeaderMap(null))
                 .execute()
@@ -71,7 +79,7 @@ public class GuoApiClient {
         String json = JSONUtil.toJsonStr(requestParams);
 
         HttpResponse response = HttpRequest
-                .post(GATEWAY_HOST + "/api/test/user")
+                .post(gatewayAddr + "/api/test/user")
                 .addHeaders(getHeaderMap(json))
                 .body(json)
                 .execute();
@@ -86,9 +94,10 @@ public class GuoApiClient {
      *
      * @return 状态码和响应值
      */
+    @SneakyThrows({JsonSyntaxException.class})
     public ImmutablePair<Integer, String> randomMessage(String params) {
         String charset, encode;
-        HttpRequest request = HttpRequest.get(GATEWAY_HOST + "/invoke/randomMessage");
+        HttpRequest request = HttpRequest.get(gatewayAddr + "/invoke/randomMessage");
         if (StringUtils.isNotBlank(params)) {
             JsonElement jsonParams = Params2JsonUtils.getJsonParams(params);
             charset = jsonParams.getAsJsonObject().get("charset").getAsString();
@@ -107,8 +116,9 @@ public class GuoApiClient {
      *
      * @return 状态码和响应值
      */
+    @SneakyThrows
     public ImmutablePair<Integer, String> randomACGPictures() {
-        HttpRequest request = HttpRequest.get(GATEWAY_HOST + "/invoke/randomACGPictures");
+        HttpRequest request = HttpRequest.get(gatewayAddr + "/invoke/randomACGPictures");
         HttpResponse response = request.addHeaders(getHeaderMap(null)).execute();
         return HttpResponseDataUtils.resData(response);
     }

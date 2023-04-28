@@ -21,8 +21,13 @@ public class GuoApiClientAutoConfiguration {
      */
     private String secretKey;
 
+    /**
+     * 手动指定网关地址
+     */
+    private String gatewayAddr;
+
     @Bean
     public GuoApiClient guoApiClient() {
-        return new GuoApiClient(accessKey, secretKey);
+        return new GuoApiClient(accessKey, secretKey, gatewayAddr);
     }
 }
